@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ranking Musical con TensorFlow.js</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Calificá los grupos del 1 al 10</h1>
+    <form id="ratings-form">
+      <div class="band">Nirvana: <input type="number" min="0" max="10" name="Nirvana" required /></div>
+      <div class="band">Nine Inch Nails: <input type="number" min="0" max="10" name="Nine Inch Nails" required /></div>
+      <div class="band">Backstreet Boys: <input type="number" min="0" max="10" name="Backstreet Boys" required /></div>
+      <div class="band">N Sync: <input type="number" min="0" max="10" name="N Sync" required /></div>
+      <div class="band">Night Club: <input type="number" min="0" max="10" name="Night Club" required /></div>
+      <div class="band">Apashe: <input type="number" min="0" max="10" name="Apashe" required /></div>
+      <div class="band">STP: <input type="number" min="0" max="10" name="STP" required /></div>
+      <button type="submit">Procesar Información</button>
+    </form>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    //bandas
+    const bands = [
+      'Nirvana',
+      'Nine Inch Nails',
+      'Backstreet Boys',
+      'N Sync',
+      'Night Club',
+      'Apashe',
+      'STP',
+    ];
+
+    //estilos de musicas
+    const features = ['Grunge', 'Rock', 'Industrial', 'Boy Band', 'Dance', 'Techno'];
+
+    // Matriz binaria: cada banda está asociada con ciertos estilos musicales
+    const band_feats = tf.tensor([
+      [1, 1, 0, 0, 0, 0],  // Nirvana
+      [1, 0, 1, 0, 0, 0],  // Nine Inch Nails
+      [0, 0, 0, 1, 1, 0],  // Backstreet Boys
+      [0, 0, 0, 1, 0, 0],  // N Sync
+      [0, 0, 1, 0, 0, 1],  // Night Club
+      [0, 0, 1, 0, 0, 1],  // Apashe
+      [1, 1, 0, 0, 0, 0],  // STP
+    ]);
+
+    document.getElementById('ratings-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      //lee la calificacion del usuario
+      const formData = new FormData(e.target);
+      const userVotes = bands.map(band => parseFloat(formData.get(band)));
+      const user_tensor = tf.tensor([userVotes]); // tensor de 1 fila x 7 columnas
+
+      // Multiplicación de matrices para obtener una "mezcla de estilos" del usuario
+      const user_feats = tf.matMul(user_tensor, band_feats); // 1x6
+
+      // Ordenar géneros musicales según preferencia del usuario
+      const topFeatures = tf.topk(user_feats, features.length);
+      const indices = topFeatures.indices.arraySync()[0];
+
+      // resultado
+      const resultText = indices.map(i => features[i]).join(', ');
+      document.getElementById('result').textContent = `Tus géneros favoritos son: ${resultText}`;
+    });
+  </script>
+</body>
+</html>
